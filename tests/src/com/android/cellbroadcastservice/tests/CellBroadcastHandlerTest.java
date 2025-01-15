@@ -23,6 +23,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
@@ -274,6 +275,15 @@ public class CellBroadcastHandlerTest extends CellBroadcastServiceTestBase {
             // message should be detected as duplicate again
             assertTrue(mCellBroadcastHandler.isDuplicate(msg));
         }
+    }
+
+    @Test
+    @SmallTest
+    public void testGetDefaultCBRPackageName() {
+        Intent intent = new Intent(Telephony.Sms.Intents.ACTION_SMS_EMERGENCY_CB_RECEIVED);
+        CellBroadcastHandler.getDefaultCBRPackageName(mMockedContext, intent);
+        verify(mMockedPackageManager, times(1))
+                .queryBroadcastReceivers(intent, PackageManager.MATCH_SYSTEM_ONLY);
     }
 
     /**
