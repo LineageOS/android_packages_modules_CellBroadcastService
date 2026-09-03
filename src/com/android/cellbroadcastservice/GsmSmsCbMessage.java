@@ -108,12 +108,29 @@ public class GsmSmsCbMessage {
             // ETWS primary message only contains 4 fields including serial number,
             // message identifier, warning type, and warning security information.
             // There is no field for the content/text so we get the text from the resources.
-            return new SmsCbMessage(SmsCbMessage.MESSAGE_FORMAT_3GPP, header.getGeographicalScope(),
-                    header.getSerialNumber(), location, header.getServiceCategory(), null,
-                    header.getDataCodingScheme(), getEtwsPrimaryMessage(context,
-                    header.getEtwsInfo().getWarningType()), SmsCbMessage.MESSAGE_PRIORITY_EMERGENCY,
-                    header.getEtwsInfo(), header.getCmasInfo(), 0, null, receivedTimeMillis,
-                    slotIndex, subId);
+            String warningMessage = getEtwsPrimaryMessage(context,
+                    header.getEtwsInfo().getWarningType());
+            if (warningMessage.isEmpty()) {
+                String errorMsg = "ETWS Primary message has empty body (unknown warning type: "
+                        + header.getEtwsInfo().getWarningType() + ")";
+                throw new IllegalArgumentException(errorMsg);
+            }
+            return new SmsCbMessage(SmsCbMessage.MESSAGE_FORMAT_3GPP,
+                    header.getGeographicalScope(),
+                    header.getSerialNumber(),
+                    location,
+                    header.getServiceCategory(),
+                    null,
+                    header.getDataCodingScheme(),
+                    warningMessage,
+                    SmsCbMessage.MESSAGE_PRIORITY_EMERGENCY,
+                    header.getEtwsInfo(),
+                    header.getCmasInfo(),
+                    0,
+                    null,
+                    receivedTimeMillis,
+                    slotIndex,
+                    subId);
         } else if (header.isUmtsFormat()) {
             // UMTS format has only 1 PDU
             byte[] pdu = pdus[0];

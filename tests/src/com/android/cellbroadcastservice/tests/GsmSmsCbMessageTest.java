@@ -999,7 +999,36 @@ public class GsmSmsCbMessageTest extends CellBroadcastServiceTestBase {
             + "573065B9306757309707300263FA308C306B5099304830664E0B30553044FF086C178C615E81FF09"
             + "00000000000000000000000000000000000000000000");
 
-    // FIXME: add example of ETWS primary notification PDU
+    private static final byte[] etwsPrimaryMessageEmptyBody =
+            hexStringToBytes("400011000A00");
+
+    private static final byte[] etwsPrimaryMessageEarthquake =
+            hexStringToBytes("400011000000");
+
+    @Test
+    public void testEtwsPrimaryMessageEmptyBody() {
+        try {
+            SmsCbHeader header = new SmsCbHeader(etwsPrimaryMessageEmptyBody);
+            byte[][] pdus = new byte[1][];
+            pdus[0] = etwsPrimaryMessageEmptyBody;
+            GsmSmsCbMessage.createSmsCbMessage(InstrumentationRegistry.getContext(),
+                    header, TEST_LOCATION, pdus, /* slotIndex */ 0);
+            fail("Expected IllegalArgumentException due to empty ETWS primary body");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("ETWS Primary message has empty body"));
+        }
+    }
+
+    @Test
+    public void testPoisonMessageDoesNotAffectSubsequentRealAlerts() {
+        SmsCbMessage poisonMsg = createFromPdu(etwsPrimaryMessageEmptyBody);
+        assertNull("Poison message must fail parsing and return null", poisonMsg);
+
+        SmsCbMessage realMsg = createFromPdu(etwsPrimaryMessageEarthquake);
+        assertNotNull("Real earthquake message must parse successfully", realMsg);
+        assertEquals(SmsCbEtwsInfo.ETWS_WARNING_TYPE_EARTHQUAKE,
+                realMsg.getEtwsWarningInfo().getWarningType());
+    }
 
     @Test
     public void testEtwsMessageNormal() {
